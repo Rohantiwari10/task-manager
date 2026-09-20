@@ -1,0 +1,145 @@
+/* ========================================
+   TASK CARD
+======================================== */
+
+.task-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+
+  padding: 18px 24px;
+
+  background: var(--card-color);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+
+  transition:
+    border-color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.task-card:hover {
+  border-color: var(--primary-color);
+  transform: translateY(-1px);
+}
+
+/* Task information */
+
+.task-info {
+  min-width: 0;
+}
+
+.task-info h3 {
+  margin: 0 0 6px;
+
+  font-size: 16px;
+  font-weight: 600;
+
+  color: var(--text-color);
+}
+
+.task-info p {
+  margin: 0;
+
+  font-size: 14px;
+  line-height: 1.5;
+
+  color: var(--muted-color);
+}
+
+/* ========================================
+   TASK META
+======================================== */
+
+.task-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  flex-shrink: 0;
+}
+
+.task-meta span {
+  padding: 5px 10px;
+
+  border-radius: 6px;
+
+  font-size: 12px;
+  font-weight: 600;
+
+  text-transform: capitalize;
+}
+
+/* Priority */
+
+.priority-low {
+  color: #16a34a;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+}
+
+.priority-medium {
+  color: #ca8a04;
+  background: #fefce8;
+  border: 1px solid #fde68a;
+}
+
+.priority-high {
+  color: #dc2626;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+}
+
+/* Status */
+
+.status-pending {
+  color: var(--primary-color);
+  background: var(--bg-color);
+  border: 1px solid var(--border-color);
+}
+
+.status-completed {
+  color: #16a34a;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+}
+
+/* ========================================
+   DARK MODE
+======================================== */
+
+[data-theme="dark"] .priority-low {
+  background: #14351f;
+  border-color: #245c35;
+}
+
+[data-theme="dark"] .priority-medium {
+  background: #3b3215;
+  border-color: #66571d;
+}
+
+[data-theme="dark"] .priority-high {
+  background: #3f1d1d;
+  border-color: #6b2b2b;
+}
+
+[data-theme="dark"] .status-completed {
+  background: #14351f;
+  border-color: #245c35;
+}
+
+/* ========================================
+   MOBILE
+======================================== */
+
+@media (max-width: 650px) {
+  .task-card {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .task-meta {
+    width: 100%;
+  }
+}

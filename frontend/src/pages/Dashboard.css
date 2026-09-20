@@ -839,3 +839,31 @@
     padding: 22px 14px;
   }
 }
+
+
+/* ========================================
+   TASK LIST
+======================================== */
+
+.task-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+
+
+/* ========================================
+   MOBILE TASK CARD
+======================================== */
+
+@media (max-width: 650px) {
+  .task-card {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .task-meta {
+    width: 100%;
+  }
+}

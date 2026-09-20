@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import Navbar from "../components/Navbar";
+import TaskCard from "../components/TaskCard";
+import api from "../services/api";
 
 import "./Dashboard.css";
 
@@ -13,19 +15,48 @@ const Dashboard = () => {
   // Controls the mobile sidebar
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  // Temporary data.
-  // We will replace this with API data next.
-  const [stats] = useState({
-    total: 0,
-    pending: 0,
-    completed: 0,
-  });
+  // Stores tasks received from the backend
+  const [tasks, setTasks] = useState([]);
+
+  // UI states for API request
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", theme);
 
     localStorage.setItem("theme", theme);
   }, [theme]);
+
+  // Fetch tasks when dashboard loads
+  useEffect(() => {
+    const fetchTasks = async () => {
+      try {
+        setLoading(true);
+        setError("");
+
+        // JWT is automatically added by the Axios interceptor
+        const response = await api.get("/tasks");
+
+        setTasks(response.data);
+      } catch (error) {
+        console.error("Error fetching tasks:", error);
+
+        // If token is invalid/expired, send user back to login
+        if (error.response?.status === 401) {
+          localStorage.removeItem("token");
+          navigate("/");
+          return;
+        }
+
+        setError(error.response?.data?.message || "Failed to load tasks");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTasks();
+  }, [navigate]);
 
   const toggleTheme = () => {
     setTheme((currentTheme) => (currentTheme === "light" ? "dark" : "light"));
@@ -41,6 +72,13 @@ const Dashboard = () => {
   const closeMobileMenu = () => {
     setMobileMenuOpen(false);
   };
+
+  // Calculate dashboard statistics from real API data
+  const total = tasks.length;
+
+  const completed = tasks.filter((task) => task.status === "completed").length;
+
+  const pending = tasks.filter((task) => task.status !== "completed").length;
 
   return (
     <div className="dashboard-page">
@@ -129,7 +167,7 @@ const Dashboard = () => {
 
               <div>
                 <p>Total Tasks</p>
-                <h2>{stats.total}</h2>
+                <h2>{total}</h2>
               </div>
             </div>
 
@@ -138,7 +176,7 @@ const Dashboard = () => {
 
               <div>
                 <p>Pending</p>
-                <h2>{stats.pending}</h2>
+                <h2>{pending}</h2>
               </div>
             </div>
 
@@ -147,7 +185,7 @@ const Dashboard = () => {
 
               <div>
                 <p>Completed</p>
-                <h2>{stats.completed}</h2>
+                <h2>{completed}</h2>
               </div>
             </div>
           </div>
@@ -164,17 +202,47 @@ const Dashboard = () => {
               <button className="view-all-button">View all</button>
             </div>
 
-            <div className="empty-state">
-              <div className="empty-icon">✓</div>
+            {/* Loading state */}
+            {loading && (
+              <div className="empty-state">
+                <h3>Loading tasks...</h3>
 
-              <h3>No tasks yet</h3>
+                <p>Please wait while we fetch your tasks.</p>
+              </div>
+            )}
 
-              <p>Create your first task and start organizing your work.</p>
+            {/* Error state */}
+            {!loading && error && (
+              <div className="empty-state">
+                <h3>Unable to load tasks</h3>
 
-              <button className="create-task-button">
-                + Create your first task
-              </button>
-            </div>
+                <p>{error}</p>
+              </div>
+            )}
+
+            {/* Empty state */}
+            {!loading && !error && tasks.length === 0 && (
+              <div className="empty-state">
+                <div className="empty-icon">✓</div>
+
+                <h3>No tasks yet</h3>
+
+                <p>Create your first task and start organizing your work.</p>
+
+                <button className="create-task-button">
+                  + Create your first task
+                </button>
+              </div>
+            )}
+
+            {/* Task list */}
+            {!loading && !error && tasks.length > 0 && (
+              <div className="task-list">
+                {tasks.map((task) => (
+                  <TaskCard key={task.id} task={task} />
+                ))}
+              </div>
+            )}
           </section>
         </section>
       </main>
