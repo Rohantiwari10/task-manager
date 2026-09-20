@@ -1,0 +1,23 @@
+/* ========================================
+   REGISTER PAGE
+======================================== */
+
+.success-message {
+  padding: 11px 12px;
+
+  margin-bottom: 15px;
+
+  border-radius: 8px;
+
+  background: #ecfdf5;
+  color: #059669;
+
+  font-size: 13px;
+}
+
+
+/* Slightly adjust registration form spacing */
+
+.auth-card form {
+  margin-top: 5px;
+}

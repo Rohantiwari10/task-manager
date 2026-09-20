@@ -4,9 +4,14 @@ require("dotenv").config();
 const pool = require("./config/db");
 const taskRoutes = require("./routes/taskRoutes");
 const authRoutes = require("./routes/authRoutes");
+const cors = require("cors");
 
 const app = express();
 
+// Allow requests from our React frontend
+app.use(cors());
+
+// Parse JSON request bodies
 app.use(express.json());
 
 // Authentication routes

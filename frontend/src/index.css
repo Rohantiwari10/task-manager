@@ -1,0 +1,402 @@
+/* ========================================
+   GLOBAL THEME VARIABLES
+======================================== */
+
+:root {
+  --bg-color: #f5f7fb;
+  --card-color: #ffffff;
+
+  --text-color: #172033;
+  --muted-color: #64748b;
+
+  --border-color: #dbe2ea;
+
+  --primary-color: #2563eb;
+  --primary-hover: #1d4ed8;
+
+  --danger-color: #dc2626;
+  --danger-bg: #fef2f2;
+}
+
+[data-theme="dark"] {
+  --bg-color: #0f172a;
+  --card-color: #1e293b;
+
+  --text-color: #f8fafc;
+  --muted-color: #94a3b8;
+
+  --border-color: #334155;
+
+  --primary-color: #3b82f6;
+  --primary-hover: #2563eb;
+
+  --danger-color: #f87171;
+  --danger-bg: #3f1d1d;
+}
+
+
+/* ========================================
+   GLOBAL RESET
+======================================== */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  min-height: 100%;
+}
+
+body {
+  min-height: 100vh;
+
+  font-family: Inter, Arial, sans-serif;
+
+  background: var(--bg-color);
+  color: var(--text-color);
+
+  transition:
+    background-color 0.25s ease,
+    color 0.25s ease;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+
+/* ========================================
+   AUTHENTICATION PAGE
+======================================== */
+
+.auth-page {
+  min-height: 100vh;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background:
+    radial-gradient(
+      circle at top left,
+      #dbeafe,
+      transparent 35%
+    ),
+    var(--bg-color);
+
+  padding: 30px;
+
+  transition: background 0.25s ease;
+}
+
+
+/* ========================================
+   AUTH CONTAINER
+======================================== */
+
+.auth-container {
+  width: 100%;
+  max-width: 950px;
+
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+
+  background: var(--card-color);
+
+  border-radius: 20px;
+  overflow: hidden;
+
+  box-shadow:
+    0 20px 60px rgba(15, 23, 42, 0.12);
+
+  transition:
+    background-color 0.25s ease,
+    box-shadow 0.25s ease;
+}
+
+
+/* ========================================
+   AUTH BRANDING
+======================================== */
+
+.auth-brand {
+  padding: 60px 50px;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+
+  background: linear-gradient(
+    145deg,
+    #2563eb,
+    #1d4ed8
+  );
+
+  color: white;
+}
+
+.brand-icon {
+  width: 52px;
+  height: 52px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 14px;
+
+  background: rgba(255, 255, 255, 0.18);
+
+  font-size: 26px;
+  font-weight: bold;
+
+  margin-bottom: 25px;
+}
+
+.auth-brand h1 {
+  font-size: 42px;
+  margin-bottom: 15px;
+}
+
+.auth-brand > p {
+  color: #dbeafe;
+
+  line-height: 1.7;
+
+  max-width: 350px;
+}
+
+.brand-features {
+  display: flex;
+  flex-direction: column;
+
+  gap: 14px;
+
+  margin-top: 35px;
+
+  color: #eff6ff;
+
+  font-size: 14px;
+}
+
+
+/* ========================================
+   AUTH CARD
+======================================== */
+
+.auth-card {
+  padding: 60px 50px;
+
+  background: var(--card-color);
+
+  transition: background-color 0.25s ease;
+}
+
+.auth-header {
+  margin-bottom: 35px;
+}
+
+.auth-header h2 {
+  font-size: 30px;
+
+  margin-bottom: 8px;
+
+  color: var(--text-color);
+}
+
+.auth-header p {
+  color: var(--muted-color);
+
+  font-size: 14px;
+}
+
+
+/* ========================================
+   FORM
+======================================== */
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+
+  font-size: 14px;
+  font-weight: 600;
+
+  margin-bottom: 8px;
+
+  color: var(--text-color);
+}
+
+.form-group input {
+  width: 100%;
+
+  padding: 13px 14px;
+
+  border: 1px solid var(--border-color);
+
+  border-radius: 9px;
+
+  outline: none;
+
+  background: var(--card-color);
+  color: var(--text-color);
+
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background-color 0.25s ease,
+    color 0.25s ease;
+}
+
+.form-group input::placeholder {
+  color: var(--muted-color);
+}
+
+.form-group input:focus {
+  border-color: var(--primary-color);
+
+  box-shadow:
+    0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+
+/* ========================================
+   PRIMARY BUTTON
+======================================== */
+
+.primary-button {
+  width: 100%;
+
+  border: none;
+  border-radius: 9px;
+
+  padding: 13px;
+
+  background: var(--primary-color);
+  color: white;
+
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition:
+    background-color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.primary-button:hover {
+  background: var(--primary-hover);
+
+  transform: translateY(-1px);
+}
+
+.primary-button:active {
+  transform: translateY(0);
+}
+
+
+/* ========================================
+   ERROR MESSAGE
+======================================== */
+
+.error-message {
+  padding: 11px 12px;
+
+  margin-bottom: 15px;
+
+  border-radius: 8px;
+
+  background: var(--danger-bg);
+  color: var(--danger-color);
+
+  font-size: 13px;
+}
+
+
+/* ========================================
+   AUTH FOOTER
+======================================== */
+
+.auth-footer {
+  text-align: center;
+
+  margin-top: 25px;
+
+  color: var(--muted-color);
+
+  font-size: 14px;
+}
+
+.auth-footer span {
+  margin-left: 5px;
+
+  color: var(--primary-color);
+
+  font-weight: 600;
+
+  cursor: pointer;
+}
+
+.auth-footer span:hover {
+  text-decoration: underline;
+}
+
+
+/* ========================================
+   RESPONSIVE AUTH PAGE
+======================================== */
+
+@media (max-width: 750px) {
+
+  .auth-page {
+    padding: 20px;
+  }
+
+  .auth-container {
+    grid-template-columns: 1fr;
+  }
+
+  .auth-brand {
+    padding: 35px;
+  }
+
+  .auth-brand h1 {
+    font-size: 32px;
+  }
+
+  .auth-card {
+    padding: 35px;
+  }
+}
+
+@media (max-width: 480px) {
+
+  .auth-page {
+    padding: 10px;
+  }
+
+  .auth-container {
+    border-radius: 14px;
+  }
+
+  .auth-brand,
+  .auth-card {
+    padding: 28px 22px;
+  }
+
+  .auth-brand h1 {
+    font-size: 28px;
+  }
+
+  .auth-header h2 {
+    font-size: 25px;
+  }
+}
