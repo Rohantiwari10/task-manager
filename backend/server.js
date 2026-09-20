@@ -2,18 +2,19 @@ const express = require("express");
 require("dotenv").config();
 
 const pool = require("./config/db");
+const taskRoutes = require("./routes/taskRoutes");
 
 const app = express();
 
-// Parse JSON request bodies
 app.use(express.json());
 
-// Basic test route
 app.get("/", (req, res) => {
     res.json({
         message: "Task Manager API is running successfully"
     });
 });
+
+app.use("/api/tasks", taskRoutes);
 
 // Start server only after checking database connection
 const startServer = async () => {
