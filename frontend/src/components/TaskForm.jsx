@@ -1,21 +1,36 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import api from "../services/api";
 
 import "./TaskForm.css";
 
-const TaskForm = ({ onClose, onTaskCreated }) => {
+const TaskForm = ({ task, onClose, onTaskCreated, onTaskUpdated }) => {
+  const isEditMode = Boolean(task);
+
   const [formData, setFormData] = useState({
     title: "",
     description: "",
     priority: "medium",
+    status: "pending",
     due_date: "",
   });
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // Update the corresponding form field
+  // When editing, fill the form with the selected task
+  useEffect(() => {
+    if (task) {
+      setFormData({
+        title: task.title || "",
+        description: task.description || "",
+        priority: task.priority || "medium",
+        status: task.status || "pending",
+        due_date: task.due_date ? task.due_date.split("T")[0] : "",
+      });
+    }
+  }, [task]);
+
   const handleChange = (event) => {
     const { name, value } = event.target;
 
@@ -32,16 +47,21 @@ const TaskForm = ({ onClose, onTaskCreated }) => {
       setLoading(true);
       setError("");
 
-      // JWT is automatically added by our Axios interceptor
-      await api.post("/tasks", formData);
+      if (isEditMode) {
+        // Update existing task
+        await api.put(`/tasks/${task.id}`, formData);
 
-      // Tell Dashboard that a new task was created
-      onTaskCreated();
+        onTaskUpdated();
+      } else {
+        // Create new task
+        await api.post("/tasks", formData);
 
-      // Close the modal
+        onTaskCreated();
+      }
+
       onClose();
     } catch (error) {
-      console.error("Error creating task:", error);
+      console.error("Error saving task:", error);
 
       if (error.response?.status === 401) {
         localStorage.removeItem("token");
@@ -49,7 +69,7 @@ const TaskForm = ({ onClose, onTaskCreated }) => {
         return;
       }
 
-      setError(error.response?.data?.message || "Failed to create task");
+      setError(error.response?.data?.message || "Failed to save task");
     } finally {
       setLoading(false);
     }
@@ -60,8 +80,11 @@ const TaskForm = ({ onClose, onTaskCreated }) => {
       <div className="task-form-modal">
         <div className="task-form-header">
           <div>
-            <p className="section-label">NEW TASK</p>
-            <h2>Create Task</h2>
+            <p className="section-label">
+              {isEditMode ? "EDIT TASK" : "NEW TASK"}
+            </p>
+
+            <h2>{isEditMode ? "Edit Task" : "Create Task"}</h2>
           </div>
 
           <button type="button" className="task-form-close" onClick={onClose}>
@@ -115,6 +138,24 @@ const TaskForm = ({ onClose, onTaskCreated }) => {
             </select>
           </div>
 
+          {/* Status - useful when editing */}
+          {isEditMode && (
+            <div className="form-group">
+              <label htmlFor="status">Status</label>
+
+              <select
+                id="status"
+                name="status"
+                value={formData.status}
+                onChange={handleChange}
+              >
+                <option value="pending">Pending</option>
+
+                <option value="completed">Completed</option>
+              </select>
+            </div>
+          )}
+
           {/* Due date */}
           <div className="form-group">
             <label htmlFor="due_date">Due Date</label>
@@ -131,7 +172,6 @@ const TaskForm = ({ onClose, onTaskCreated }) => {
           {/* API error */}
           {error && <p className="task-form-error">{error}</p>}
 
-          {/* Actions */}
           <div className="task-form-actions">
             <button
               type="button"
@@ -147,7 +187,11 @@ const TaskForm = ({ onClose, onTaskCreated }) => {
               className="submit-task-button"
               disabled={loading}
             >
-              {loading ? "Creating..." : "Create Task"}
+              {loading
+                ? "Saving..."
+                : isEditMode
+                  ? "Save Changes"
+                  : "Create Task"}
             </button>
           </div>
         </form>

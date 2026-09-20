@@ -5,8 +5,7 @@
 .task-card {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 20px;
+  gap: 16px;
 
   padding: 18px 24px;
 
@@ -16,7 +15,8 @@
 
   transition:
     border-color 0.2s ease,
-    transform 0.2s ease;
+    transform 0.2s ease,
+    opacity 0.2s ease;
 }
 
 .task-card:hover {
@@ -24,10 +24,65 @@
   transform: translateY(-1px);
 }
 
-/* Task information */
+/* Completed task */
+
+.task-card.task-completed {
+  opacity: 0.75;
+}
+
+.task-card.task-completed .task-info h3 {
+  text-decoration: line-through;
+  color: var(--muted-color);
+}
+
+/* ========================================
+   COMPLETION CHECKBOX
+======================================== */
+
+.task-check {
+  width: 24px;
+  height: 24px;
+
+  flex-shrink: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0;
+
+  border: 2px solid var(--border-color);
+  border-radius: 50%;
+
+  background: transparent;
+  color: white;
+
+  font-size: 13px;
+  font-weight: 700;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.task-check:hover {
+  border-color: var(--primary-color);
+}
+
+.task-check.checked {
+  border-color: #16a34a;
+  background: #16a34a;
+}
+
+/* ========================================
+   TASK INFORMATION
+======================================== */
 
 .task-info {
   min-width: 0;
+  flex: 1;
 }
 
 .task-info h3 {
@@ -49,15 +104,21 @@
 }
 
 /* ========================================
-   TASK META
+   RIGHT SIDE
 ======================================== */
+
+.task-card-right {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+
+  flex-shrink: 0;
+}
 
 .task-meta {
   display: flex;
   align-items: center;
   gap: 8px;
-
-  flex-shrink: 0;
 }
 
 .task-meta span {
@@ -71,7 +132,9 @@
   text-transform: capitalize;
 }
 
-/* Priority */
+/* ========================================
+   PRIORITY
+======================================== */
 
 .priority-low {
   color: #16a34a;
@@ -91,7 +154,9 @@
   border: 1px solid #fecaca;
 }
 
-/* Status */
+/* ========================================
+   STATUS
+======================================== */
 
 .status-pending {
   color: var(--primary-color);
@@ -106,10 +171,55 @@
 }
 
 /* ========================================
+   ACTION BUTTONS
+======================================== */
+
+.task-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.edit-task-button,
+.delete-task-button {
+  padding: 6px 10px;
+
+  border-radius: 6px;
+
+  font-size: 12px;
+  font-weight: 600;
+
+  cursor: pointer;
+}
+
+.edit-task-button {
+  border: 1px solid var(--border-color);
+
+  background: var(--bg-color);
+  color: var(--text-color);
+}
+
+.edit-task-button:hover {
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+}
+
+.delete-task-button {
+  border: 1px solid #fecaca;
+
+  background: var(--danger-bg);
+  color: var(--danger-color);
+}
+
+.delete-task-button:hover {
+  border-color: var(--danger-color);
+}
+
+/* ========================================
    DARK MODE
 ======================================== */
 
-[data-theme="dark"] .priority-low {
+[data-theme="dark"] .priority-low,
+[data-theme="dark"] .status-completed {
   background: #14351f;
   border-color: #245c35;
 }
@@ -124,22 +234,25 @@
   border-color: #6b2b2b;
 }
 
-[data-theme="dark"] .status-completed {
-  background: #14351f;
-  border-color: #245c35;
-}
-
 /* ========================================
    MOBILE
 ======================================== */
 
 @media (max-width: 650px) {
   .task-card {
-    flex-direction: column;
     align-items: flex-start;
   }
 
+  .task-card-right {
+    flex: 1;
+    flex-wrap: wrap;
+  }
+
   .task-meta {
+    flex: 1;
+  }
+
+  .task-actions {
     width: 100%;
   }
 }

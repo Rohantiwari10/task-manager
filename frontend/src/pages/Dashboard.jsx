@@ -13,18 +13,25 @@ const Dashboard = () => {
 
   const [theme, setTheme] = useState(localStorage.getItem("theme") || "light");
 
-  // Controls the mobile sidebar
+  // Mobile sidebar state
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  // Controls the Create Task modal
+  // Create/Edit task modal
   const [showTaskForm, setShowTaskForm] = useState(false);
 
-  // Stores tasks received from the backend
+  // Stores the task currently being edited
+  const [editingTask, setEditingTask] = useState(null);
+
+  // Tasks received from backend
   const [tasks, setTasks] = useState([]);
 
-  // API request states
+  // API states
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
+  // ========================================
+  // THEME
+  // ========================================
 
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", theme);
@@ -32,20 +39,26 @@ const Dashboard = () => {
     localStorage.setItem("theme", theme);
   }, [theme]);
 
-  // Fetch all tasks belonging to the logged-in user
+  const toggleTheme = () => {
+    setTheme((currentTheme) => (currentTheme === "light" ? "dark" : "light"));
+  };
+
+  // ========================================
+  // FETCH TASKS
+  // ========================================
+
   const fetchTasks = useCallback(async () => {
     try {
       setLoading(true);
       setError("");
 
-      // Axios interceptor automatically adds the JWT
+      // JWT is automatically added by Axios interceptor
       const response = await api.get("/tasks");
 
       setTasks(response.data);
     } catch (error) {
       console.error("Error fetching tasks:", error);
 
-      // Token is missing, invalid or expired
       if (error.response?.status === 401) {
         localStorage.removeItem("token");
         navigate("/");
@@ -58,14 +71,14 @@ const Dashboard = () => {
     }
   }, [navigate]);
 
-  // Fetch tasks when dashboard first loads
+  // Fetch tasks when dashboard loads
   useEffect(() => {
     fetchTasks();
   }, [fetchTasks]);
 
-  const toggleTheme = () => {
-    setTheme((currentTheme) => (currentTheme === "light" ? "dark" : "light"));
-  };
+  // ========================================
+  // LOGOUT
+  // ========================================
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -73,41 +86,162 @@ const Dashboard = () => {
     navigate("/");
   };
 
-  // Close mobile sidebar
+  // ========================================
+  // MOBILE MENU
+  // ========================================
+
   const closeMobileMenu = () => {
     setMobileMenuOpen(false);
   };
 
-  // Open Create Task modal
-  const openTaskForm = () => {
+  // ========================================
+  // CREATE TASK
+  // ========================================
+
+  const openCreateForm = () => {
+    setEditingTask(null);
     setShowTaskForm(true);
   };
 
-  // Close Create Task modal
+  // ========================================
+  // EDIT TASK
+  // ========================================
+
+  const handleEdit = (task) => {
+    setEditingTask(task);
+    setShowTaskForm(true);
+  };
+
+  // ========================================
+  // DELETE TASK
+  // ========================================
+
+  const handleDelete = async (taskId) => {
+    const confirmed = window.confirm(
+      "Are you sure you want to delete this task?",
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      setError("");
+
+      await api.delete(`/tasks/${taskId}`);
+
+      await fetchTasks();
+    } catch (error) {
+      console.error("Error deleting task:", error);
+
+      if (error.response?.status === 401) {
+        localStorage.removeItem("token");
+        navigate("/");
+        return;
+      }
+
+      setError(error.response?.data?.message || "Failed to delete task");
+    }
+  };
+
+  // ========================================
+  // TOGGLE TASK COMPLETION
+  // ========================================
+
+  const handleToggleComplete = async (task) => {
+    try {
+      setError("");
+
+      const newStatus = task.status === "completed" ? "pending" : "completed";
+
+      // Backend update API requires the complete
+      // task data, so send the existing values
+      // with only status changed.
+      await api.put(`/tasks/${task.id}`, {
+        title: task.title,
+        description: task.description,
+        status: newStatus,
+        priority: task.priority,
+        due_date: task.due_date ? task.due_date.split("T")[0] : null,
+      });
+
+      // Fetch updated data so stats and ordering
+      // are updated from the backend.
+      await fetchTasks();
+    } catch (error) {
+      console.error("Error updating task status:", error);
+
+      if (error.response?.status === 401) {
+        localStorage.removeItem("token");
+        navigate("/");
+        return;
+      }
+
+      setError(error.response?.data?.message || "Failed to update task");
+    }
+  };
+
+  // ========================================
+  // AFTER CREATE / UPDATE
+  // ========================================
+
+  const handleTaskCreated = async () => {
+    await fetchTasks();
+  };
+
+  const handleTaskUpdated = async () => {
+    await fetchTasks();
+  };
+
+  // ========================================
+  // CLOSE FORM
+  // ========================================
+
   const closeTaskForm = () => {
     setShowTaskForm(false);
+    setEditingTask(null);
   };
 
-  // Called after TaskForm successfully creates a task
-  const handleTaskCreated = () => {
-    fetchTasks();
-  };
+  // ========================================
+  // STATISTICS
+  // ========================================
 
-  // Dashboard statistics
   const total = tasks.length;
 
   const completed = tasks.filter((task) => task.status === "completed").length;
 
   const pending = tasks.filter((task) => task.status !== "completed").length;
 
+  // ========================================
+  // TASK ORDER
+  // ========================================
+
+  // Pending tasks first, completed tasks last.
+  const sortedTasks = [...tasks].sort((a, b) => {
+    const aCompleted = a.status === "completed";
+
+    const bCompleted = b.status === "completed";
+
+    return Number(aCompleted) - Number(bCompleted);
+  });
+
+  // ========================================
+  // UI
+  // ========================================
+
   return (
     <div className="dashboard-page">
       {/* ========================================
-          CREATE TASK MODAL
+          CREATE / EDIT MODAL
       ======================================== */}
 
       {showTaskForm && (
-        <TaskForm onClose={closeTaskForm} onTaskCreated={handleTaskCreated} />
+        <TaskForm
+          task={editingTask}
+          onClose={closeTaskForm}
+          onTaskCreated={handleTaskCreated}
+          onTaskUpdated={handleTaskUpdated}
+        />
       )}
 
       {/* Mobile overlay */}
@@ -127,7 +261,6 @@ const Dashboard = () => {
 
           <span>TaskFlow</span>
 
-          {/* Close button - mobile only */}
           <button className="mobile-close-button" onClick={closeMobileMenu}>
             ×
           </button>
@@ -183,7 +316,7 @@ const Dashboard = () => {
               <p>Here's what's happening with your tasks.</p>
             </div>
 
-            <button className="create-task-button" onClick={openTaskForm}>
+            <button className="create-task-button" onClick={openCreateForm}>
               + Create Task
             </button>
           </div>
@@ -236,8 +369,17 @@ const Dashboard = () => {
               <button className="view-all-button">View all</button>
             </div>
 
+            {/* Error */}
+            {error && (
+              <div className="empty-state">
+                <h3>Something went wrong</h3>
+
+                <p>{error}</p>
+              </div>
+            )}
+
             {/* Loading */}
-            {loading && (
+            {!error && loading && (
               <div className="empty-state">
                 <h3>Loading tasks...</h3>
 
@@ -245,17 +387,8 @@ const Dashboard = () => {
               </div>
             )}
 
-            {/* Error */}
-            {!loading && error && (
-              <div className="empty-state">
-                <h3>Unable to load tasks</h3>
-
-                <p>{error}</p>
-              </div>
-            )}
-
             {/* Empty */}
-            {!loading && !error && tasks.length === 0 && (
+            {!error && !loading && tasks.length === 0 && (
               <div className="empty-state">
                 <div className="empty-icon">✓</div>
 
@@ -263,17 +396,23 @@ const Dashboard = () => {
 
                 <p>Create your first task and start organizing your work.</p>
 
-                <button className="create-task-button" onClick={openTaskForm}>
+                <button className="create-task-button" onClick={openCreateForm}>
                   + Create your first task
                 </button>
               </div>
             )}
 
-            {/* Tasks */}
-            {!loading && !error && tasks.length > 0 && (
+            {/* Task list */}
+            {!error && !loading && tasks.length > 0 && (
               <div className="task-list">
-                {tasks.map((task) => (
-                  <TaskCard key={task.id} task={task} />
+                {sortedTasks.map((task) => (
+                  <TaskCard
+                    key={task.id}
+                    task={task}
+                    onEdit={handleEdit}
+                    onDelete={handleDelete}
+                    onToggleComplete={handleToggleComplete}
+                  />
                 ))}
               </div>
             )}
