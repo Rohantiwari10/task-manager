@@ -6,6 +6,7 @@ const authenticateToken = require("../middleware/authMiddleware");
 
 const {
   getTasks,
+  getTaskById,
   createTask,
   updateTask,
   deleteTask,
@@ -13,6 +14,9 @@ const {
 
 // GET /api/tasks - get all tasks
 router.get("/", authenticateToken, getTasks);
+
+// GET /api/tasks/:id - get one task
+router.get("/:id", authenticateToken, getTaskById);
 
 // POST /api/tasks - create a new task
 router.post("/", authenticateToken, createTask);

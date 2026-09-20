@@ -8,10 +8,24 @@ const registerUser = async (req, res) => {
     // Get user data sent by the client
     const { name, email, password } = req.body;
 
-    // Basic validation
+    // Basic input validation
     if (!name || !email || !password) {
       return res.status(400).json({
         message: "Name, email and password are required",
+      });
+    }
+
+    // Validate password length
+    if (password.length < 6) {
+      return res.status(400).json({
+        message: "Password must be at least 6 characters",
+      });
+    }
+
+    // Basic email format validation
+    if (!email.includes("@")) {
+      return res.status(400).json({
+        message: "Please provide a valid email",
       });
     }
 
