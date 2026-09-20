@@ -39,7 +39,51 @@ const createTask = async (req, res) => {
   }
 };
 
+
+const updateTask = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const {
+            title,
+            description,
+            status,
+            priority,
+            due_date
+        } = req.body;
+
+        const [result] = await pool.query(
+            `UPDATE tasks
+             SET title = ?,
+                 description = ?,
+                 status = ?,
+                 priority = ?,
+                 due_date = ?
+             WHERE id = ?`,
+            [title, description, status, priority, due_date, id]
+        );
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({
+                message: "Task not found"
+            });
+        }
+
+        res.status(200).json({
+            message: "Task updated successfully"
+        });
+
+    } catch (error) {
+        console.error("Error updating task:", error.message);
+
+        res.status(500).json({
+            message: "Failed to update task"
+        });
+    }
+};
+
 module.exports = {
   getTasks,
   createTask,
+  updateTask
 };
