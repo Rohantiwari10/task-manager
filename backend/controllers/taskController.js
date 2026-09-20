@@ -82,8 +82,42 @@ const updateTask = async (req, res) => {
     }
 };
 
+
+// Delete a task using its ID from the URL
+const deleteTask = async (req, res) => {
+    try {
+        // Get task ID from URL: /api/tasks/:id
+        const { id } = req.params;
+
+        // Delete the task with the given ID
+        const [result] = await pool.query(
+            "DELETE FROM tasks WHERE id = ?",
+            [id]
+        );
+
+        // If no row was deleted, the task doesn't exist
+        if (result.affectedRows === 0) {
+            return res.status(404).json({
+                message: "Task not found"
+            });
+        }
+
+        res.status(200).json({
+            message: "Task deleted successfully"
+        });
+
+    } catch (error) {
+        console.error("Error deleting task:", error.message);
+
+        res.status(500).json({
+            message: "Failed to delete task"
+        });
+    }
+};
+
 module.exports = {
   getTasks,
   createTask,
-  updateTask
+  updateTask,
+  deleteTask
 };
