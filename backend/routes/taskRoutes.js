@@ -2,9 +2,9 @@ const express = require("express");
 
 const router = express.Router();
 
-const { getTasks } = require("../controllers/taskController");
+const { getTasks, createTask } = require("../controllers/taskController");
 
-// GET /api/tasks
 router.get("/", getTasks);
+router.post("/", createTask);
 
 module.exports = router;
