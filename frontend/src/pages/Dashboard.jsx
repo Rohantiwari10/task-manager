@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import Navbar from "../components/Navbar";
 import TaskCard from "../components/TaskCard";
+import TaskForm from "../components/TaskForm";
 import api from "../services/api";
 
 import "./Dashboard.css";
@@ -15,10 +16,13 @@ const Dashboard = () => {
   // Controls the mobile sidebar
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+  // Controls the Create Task modal
+  const [showTaskForm, setShowTaskForm] = useState(false);
+
   // Stores tasks received from the backend
   const [tasks, setTasks] = useState([]);
 
-  // UI states for API request
+  // API request states
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -28,35 +32,36 @@ const Dashboard = () => {
     localStorage.setItem("theme", theme);
   }, [theme]);
 
-  // Fetch tasks when dashboard loads
-  useEffect(() => {
-    const fetchTasks = async () => {
-      try {
-        setLoading(true);
-        setError("");
+  // Fetch all tasks belonging to the logged-in user
+  const fetchTasks = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError("");
 
-        // JWT is automatically added by the Axios interceptor
-        const response = await api.get("/tasks");
+      // Axios interceptor automatically adds the JWT
+      const response = await api.get("/tasks");
 
-        setTasks(response.data);
-      } catch (error) {
-        console.error("Error fetching tasks:", error);
+      setTasks(response.data);
+    } catch (error) {
+      console.error("Error fetching tasks:", error);
 
-        // If token is invalid/expired, send user back to login
-        if (error.response?.status === 401) {
-          localStorage.removeItem("token");
-          navigate("/");
-          return;
-        }
-
-        setError(error.response?.data?.message || "Failed to load tasks");
-      } finally {
-        setLoading(false);
+      // Token is missing, invalid or expired
+      if (error.response?.status === 401) {
+        localStorage.removeItem("token");
+        navigate("/");
+        return;
       }
-    };
 
-    fetchTasks();
+      setError(error.response?.data?.message || "Failed to load tasks");
+    } finally {
+      setLoading(false);
+    }
   }, [navigate]);
+
+  // Fetch tasks when dashboard first loads
+  useEffect(() => {
+    fetchTasks();
+  }, [fetchTasks]);
 
   const toggleTheme = () => {
     setTheme((currentTheme) => (currentTheme === "light" ? "dark" : "light"));
@@ -68,12 +73,27 @@ const Dashboard = () => {
     navigate("/");
   };
 
-  // Close mobile menu after selecting an item
+  // Close mobile sidebar
   const closeMobileMenu = () => {
     setMobileMenuOpen(false);
   };
 
-  // Calculate dashboard statistics from real API data
+  // Open Create Task modal
+  const openTaskForm = () => {
+    setShowTaskForm(true);
+  };
+
+  // Close Create Task modal
+  const closeTaskForm = () => {
+    setShowTaskForm(false);
+  };
+
+  // Called after TaskForm successfully creates a task
+  const handleTaskCreated = () => {
+    fetchTasks();
+  };
+
+  // Dashboard statistics
   const total = tasks.length;
 
   const completed = tasks.filter((task) => task.status === "completed").length;
@@ -82,6 +102,14 @@ const Dashboard = () => {
 
   return (
     <div className="dashboard-page">
+      {/* ========================================
+          CREATE TASK MODAL
+      ======================================== */}
+
+      {showTaskForm && (
+        <TaskForm onClose={closeTaskForm} onTaskCreated={handleTaskCreated} />
+      )}
+
       {/* Mobile overlay */}
       {mobileMenuOpen && (
         <div className="mobile-overlay" onClick={closeMobileMenu} />
@@ -122,7 +150,6 @@ const Dashboard = () => {
           </button>
         </nav>
 
-        {/* Logout stays in sidebar only */}
         <div className="sidebar-bottom">
           <button className="nav-item" onClick={handleLogout}>
             <span>↪</span>
@@ -142,12 +169,11 @@ const Dashboard = () => {
           onMenuToggle={() => setMobileMenuOpen(!mobileMenuOpen)}
         />
 
-        {/* ========================================
-            SCROLLABLE CONTENT
-        ======================================== */}
-
         <section className="dashboard-content">
-          {/* Welcome */}
+          {/* ========================================
+              WELCOME
+          ======================================== */}
+
           <div className="welcome-section">
             <div>
               <p className="section-label">OVERVIEW</p>
@@ -157,10 +183,15 @@ const Dashboard = () => {
               <p>Here's what's happening with your tasks.</p>
             </div>
 
-            <button className="create-task-button">+ Create Task</button>
+            <button className="create-task-button" onClick={openTaskForm}>
+              + Create Task
+            </button>
           </div>
 
-          {/* Statistics */}
+          {/* ========================================
+              STATISTICS
+          ======================================== */}
+
           <div className="stats-grid">
             <div className="stat-card">
               <div className="stat-icon blue">✓</div>
@@ -190,7 +221,10 @@ const Dashboard = () => {
             </div>
           </div>
 
-          {/* Tasks */}
+          {/* ========================================
+              TASKS
+          ======================================== */}
+
           <section className="tasks-section">
             <div className="tasks-header">
               <div>
@@ -202,7 +236,7 @@ const Dashboard = () => {
               <button className="view-all-button">View all</button>
             </div>
 
-            {/* Loading state */}
+            {/* Loading */}
             {loading && (
               <div className="empty-state">
                 <h3>Loading tasks...</h3>
@@ -211,7 +245,7 @@ const Dashboard = () => {
               </div>
             )}
 
-            {/* Error state */}
+            {/* Error */}
             {!loading && error && (
               <div className="empty-state">
                 <h3>Unable to load tasks</h3>
@@ -220,7 +254,7 @@ const Dashboard = () => {
               </div>
             )}
 
-            {/* Empty state */}
+            {/* Empty */}
             {!loading && !error && tasks.length === 0 && (
               <div className="empty-state">
                 <div className="empty-icon">✓</div>
@@ -229,13 +263,13 @@ const Dashboard = () => {
 
                 <p>Create your first task and start organizing your work.</p>
 
-                <button className="create-task-button">
+                <button className="create-task-button" onClick={openTaskForm}>
                   + Create your first task
                 </button>
               </div>
             )}
 
-            {/* Task list */}
+            {/* Tasks */}
             {!loading && !error && tasks.length > 0 && (
               <div className="task-list">
                 {tasks.map((task) => (
