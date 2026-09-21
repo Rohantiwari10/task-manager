@@ -840,6 +840,106 @@
   }
 }
 
+/* ========================================
+   DASHBOARD TASK GROUPS
+======================================== */
+
+.dashboard-task-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.dashboard-task-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.dashboard-task-group-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.dashboard-task-group-header h3 {
+  margin: 0;
+
+  font-size: 15px;
+  font-weight: 600;
+
+  color: var(--text-color);
+}
+
+.dashboard-task-group-header span {
+  min-width: 22px;
+  height: 22px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+
+  background: var(--bg-color);
+  color: var(--muted-color);
+
+  font-size: 12px;
+}
+
+/* Dashboard task groups */
+.dashboard-task-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  margin-top: 20px;
+}
+
+.dashboard-task-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.dashboard-task-group-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.dashboard-task-group-header h3 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-color);
+}
+
+.dashboard-task-group-header span {
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+  background: var(--bg-color);
+  color: var(--muted-color);
+
+  font-size: 12px;
+}
+
+.dashboard-empty-group {
+  margin: 0;
+  padding: 16px;
+
+  border: 1px dashed var(--border-color);
+  border-radius: 10px;
+
+  color: var(--muted-color);
+  font-size: 13px;
+}
 
 /* ========================================
    TASK LIST
@@ -850,8 +950,6 @@
   flex-direction: column;
   gap: 12px;
 }
-
-
 
 /* ========================================
    MOBILE TASK CARD

@@ -3,6 +3,8 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
+import Tasks from "./pages/Tasks";
+
 import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
@@ -11,14 +13,25 @@ function App() {
       <Routes>
         {/* Public routes */}
         <Route path="/" element={<Login />} />
+
         <Route path="/register" element={<Register />} />
 
-        {/* Protected routes */}
+        {/* Protected dashboard */}
         <Route
           path="/dashboard"
           element={
             <ProtectedRoute>
               <Dashboard />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Protected tasks page */}
+        <Route
+          path="/tasks"
+          element={
+            <ProtectedRoute>
+              <Tasks />
             </ProtectedRoute>
           }
         />

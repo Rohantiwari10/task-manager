@@ -234,6 +234,13 @@
   border-color: #6b2b2b;
 }
 
+.task-due-date {
+  display: block;
+  margin-top: 6px;
+  color: var(--muted-color);
+  font-size: 12px;
+}
+
 /* ========================================
    MOBILE
 ======================================== */

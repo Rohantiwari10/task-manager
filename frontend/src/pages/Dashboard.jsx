@@ -13,21 +13,21 @@ const Dashboard = () => {
 
   const [theme, setTheme] = useState(localStorage.getItem("theme") || "light");
 
-  // Mobile sidebar state
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  // Create/Edit task modal
   const [showTaskForm, setShowTaskForm] = useState(false);
 
-  // Stores the task currently being edited
   const [editingTask, setEditingTask] = useState(null);
 
-  // Tasks received from backend
+  // Tasks received from the backend.
   const [tasks, setTasks] = useState([]);
 
-  // API states
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
+  // Stores the ID of the task currently being updated.
+  // This prevents repeated checkbox clicks while the API request is running.
+  const [updatingTaskId, setUpdatingTaskId] = useState(null);
 
   // ========================================
   // THEME
@@ -47,34 +47,68 @@ const Dashboard = () => {
   // FETCH TASKS
   // ========================================
 
-  const fetchTasks = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError("");
+  const fetchTasks = useCallback(
+    async (showLoading = true) => {
+      try {
+        // Only show the full loading state on initial/page loading.
+        if (showLoading) {
+          setLoading(true);
+        }
 
-      // JWT is automatically added by Axios interceptor
-      const response = await api.get("/tasks");
+        setError("");
 
-      setTasks(response.data);
-    } catch (error) {
-      console.error("Error fetching tasks:", error);
+        const response = await api.get("/tasks");
 
-      if (error.response?.status === 401) {
-        localStorage.removeItem("token");
-        navigate("/");
-        return;
+        setTasks(response.data);
+      } catch (error) {
+        console.error("Error fetching tasks:", error);
+
+        if (error.response?.status === 401) {
+          localStorage.removeItem("token");
+          navigate("/");
+          return;
+        }
+
+        setError(error.response?.data?.message || "Failed to load tasks");
+      } finally {
+        // Don't show the loading screen during small background refreshes.
+        if (showLoading) {
+          setLoading(false);
+        }
       }
+    },
+    [navigate],
+  );
 
-      setError(error.response?.data?.message || "Failed to load tasks");
-    } finally {
-      setLoading(false);
-    }
-  }, [navigate]);
-
-  // Fetch tasks when dashboard loads
   useEffect(() => {
     fetchTasks();
   }, [fetchTasks]);
+
+  // ========================================
+  // DATE HELPERS
+  // ========================================
+
+  // Converts a date into YYYY-MM-DD.
+  const getDateOnly = (date) => {
+    if (!date) {
+      return null;
+    }
+
+    return String(date).split("T")[0];
+  };
+
+  // Get today's date using the user's local time.
+  const getToday = () => {
+    const today = new Date();
+
+    const year = today.getFullYear();
+
+    const month = String(today.getMonth() + 1).padStart(2, "0");
+
+    const day = String(today.getDate()).padStart(2, "0");
+
+    return `${year}-${month}-${day}`;
+  };
 
   // ========================================
   // LOGOUT
@@ -95,7 +129,7 @@ const Dashboard = () => {
   };
 
   // ========================================
-  // CREATE TASK
+  // CREATE
   // ========================================
 
   const openCreateForm = () => {
@@ -104,7 +138,7 @@ const Dashboard = () => {
   };
 
   // ========================================
-  // EDIT TASK
+  // EDIT
   // ========================================
 
   const handleEdit = (task) => {
@@ -113,7 +147,7 @@ const Dashboard = () => {
   };
 
   // ========================================
-  // DELETE TASK
+  // DELETE
   // ========================================
 
   const handleDelete = async (taskId) => {
@@ -145,29 +179,27 @@ const Dashboard = () => {
   };
 
   // ========================================
-  // TOGGLE TASK COMPLETION
+  // COMPLETE / PENDING
   // ========================================
 
   const handleToggleComplete = async (task) => {
     try {
       setError("");
+      setUpdatingTaskId(task.id);
 
+      // Toggle between pending and completed.
       const newStatus = task.status === "completed" ? "pending" : "completed";
 
-      // Backend update API requires the complete
-      // task data, so send the existing values
-      // with only status changed.
       await api.put(`/tasks/${task.id}`, {
         title: task.title,
         description: task.description,
         status: newStatus,
         priority: task.priority,
-        due_date: task.due_date ? task.due_date.split("T")[0] : null,
+        due_date: task.due_date ? String(task.due_date).split("T")[0] : null,
       });
 
-      // Fetch updated data so stats and ordering
-      // are updated from the backend.
-      await fetchTasks();
+      // Fetch fresh data after successful update.
+      await fetchTasks(false);
     } catch (error) {
       console.error("Error updating task status:", error);
 
@@ -178,6 +210,9 @@ const Dashboard = () => {
       }
 
       setError(error.response?.data?.message || "Failed to update task");
+    } finally {
+      // Allow checkbox interaction again.
+      setUpdatingTaskId(null);
     }
   };
 
@@ -213,17 +248,47 @@ const Dashboard = () => {
   const pending = tasks.filter((task) => task.status !== "completed").length;
 
   // ========================================
-  // TASK ORDER
+  // DASHBOARD TASK GROUPS
   // ========================================
 
-  // Pending tasks first, completed tasks last.
-  const sortedTasks = [...tasks].sort((a, b) => {
-    const aCompleted = a.status === "completed";
+  const today = getToday();
 
-    const bCompleted = b.status === "completed";
+  // Dashboard only displays unfinished tasks.
+  const pendingTasks = tasks.filter((task) => task.status !== "completed");
 
-    return Number(aCompleted) - Number(bCompleted);
-  });
+  // Tasks whose due date has already passed.
+  const overdueTasks = pendingTasks
+    .filter((task) => {
+      const dueDate = getDateOnly(task.due_date);
+
+      return dueDate && dueDate < today;
+    })
+    .sort((a, b) =>
+      getDateOnly(a.due_date).localeCompare(getDateOnly(b.due_date)),
+    )
+    .slice(0, 5);
+
+  // Tasks due today.
+  const todayTasks = pendingTasks
+    .filter((task) => getDateOnly(task.due_date) === today)
+    .slice(0, 5);
+
+  // Tasks with a future due date.
+  const upcomingTasks = pendingTasks
+    .filter((task) => {
+      const dueDate = getDateOnly(task.due_date);
+
+      return dueDate && dueDate > today;
+    })
+    .sort((a, b) =>
+      getDateOnly(a.due_date).localeCompare(getDateOnly(b.due_date)),
+    )
+    .slice(0, 5);
+
+  // Tasks without a due date.
+  const noDueDateTasks = pendingTasks
+    .filter((task) => !getDateOnly(task.due_date))
+    .slice(0, 3);
 
   // ========================================
   // UI
@@ -231,10 +296,7 @@ const Dashboard = () => {
 
   return (
     <div className="dashboard-page">
-      {/* ========================================
-          CREATE / EDIT MODAL
-      ======================================== */}
-
+      {/* Create / Edit modal */}
       {showTaskForm && (
         <TaskForm
           task={editingTask}
@@ -267,17 +329,20 @@ const Dashboard = () => {
         </div>
 
         <nav className="sidebar-nav">
-          <button className="nav-item active" onClick={closeMobileMenu}>
+          <button
+            className="nav-item active"
+            onClick={() => navigate("/dashboard")}
+          >
             <span>▦</span>
             Dashboard
           </button>
 
-          <button className="nav-item" onClick={closeMobileMenu}>
+          <button className="nav-item" onClick={() => navigate("/tasks")}>
             <span>✓</span>
             Tasks
           </button>
 
-          <button className="nav-item" onClick={closeMobileMenu}>
+          <button className="nav-item" onClick={() => navigate("/profile")}>
             <span>◉</span>
             Profile
           </button>
@@ -303,10 +368,7 @@ const Dashboard = () => {
         />
 
         <section className="dashboard-content">
-          {/* ========================================
-              WELCOME
-          ======================================== */}
-
+          {/* Welcome */}
           <div className="welcome-section">
             <div>
               <p className="section-label">OVERVIEW</p>
@@ -321,10 +383,7 @@ const Dashboard = () => {
             </button>
           </div>
 
-          {/* ========================================
-              STATISTICS
-          ======================================== */}
-
+          {/* Statistics */}
           <div className="stats-grid">
             <div className="stat-card">
               <div className="stat-icon blue">✓</div>
@@ -355,7 +414,7 @@ const Dashboard = () => {
           </div>
 
           {/* ========================================
-              TASKS
+              TASK OVERVIEW
           ======================================== */}
 
           <section className="tasks-section">
@@ -363,10 +422,15 @@ const Dashboard = () => {
               <div>
                 <h2>Your Tasks</h2>
 
-                <p>Manage your work and stay organized.</p>
+                <p>Focus on what's coming next.</p>
               </div>
 
-              <button className="view-all-button">View all</button>
+              <button
+                className="view-all-button"
+                onClick={() => navigate("/tasks")}
+              >
+                View all
+              </button>
             </div>
 
             {/* Error */}
@@ -387,33 +451,129 @@ const Dashboard = () => {
               </div>
             )}
 
-            {/* Empty */}
-            {!error && !loading && tasks.length === 0 && (
+            {/* No pending tasks */}
+            {!error && !loading && pendingTasks.length === 0 && (
               <div className="empty-state">
                 <div className="empty-icon">✓</div>
 
-                <h3>No tasks yet</h3>
+                <h3>You're all caught up!</h3>
 
-                <p>Create your first task and start organizing your work.</p>
+                <p>You don't have any pending tasks right now.</p>
 
                 <button className="create-task-button" onClick={openCreateForm}>
-                  + Create your first task
+                  + Create a task
                 </button>
               </div>
             )}
 
-            {/* Task list */}
-            {!error && !loading && tasks.length > 0 && (
-              <div className="task-list">
-                {sortedTasks.map((task) => (
-                  <TaskCard
-                    key={task.id}
-                    task={task}
-                    onEdit={handleEdit}
-                    onDelete={handleDelete}
-                    onToggleComplete={handleToggleComplete}
-                  />
-                ))}
+            {/* Pending task groups */}
+            {!error && !loading && pendingTasks.length > 0 && (
+              <div className="dashboard-task-groups">
+                {/* Overdue */}
+                <div className="dashboard-task-group">
+                  <div className="dashboard-task-group-header">
+                    <h3>Overdue</h3>
+
+                    <span>{overdueTasks.length}</span>
+                  </div>
+
+                  {overdueTasks.length > 0 ? (
+                    <div className="task-list">
+                      {overdueTasks.map((task) => (
+                        <TaskCard
+                          key={task.id}
+                          task={task}
+                          onEdit={handleEdit}
+                          onDelete={handleDelete}
+                          onToggleComplete={handleToggleComplete}
+                          isUpdating={updatingTaskId === task.id}
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="dashboard-empty-group">No overdue tasks.</p>
+                  )}
+                </div>
+
+                {/* Today */}
+                <div className="dashboard-task-group">
+                  <div className="dashboard-task-group-header">
+                    <h3>Today</h3>
+
+                    <span>{todayTasks.length}</span>
+                  </div>
+
+                  {todayTasks.length > 0 ? (
+                    <div className="task-list">
+                      {todayTasks.map((task) => (
+                        <TaskCard
+                          key={task.id}
+                          task={task}
+                          onEdit={handleEdit}
+                          onDelete={handleDelete}
+                          onToggleComplete={handleToggleComplete}
+                          isUpdating={updatingTaskId === task.id}
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="dashboard-empty-group">No tasks due today.</p>
+                  )}
+                </div>
+
+                {/* Upcoming */}
+                <div className="dashboard-task-group">
+                  <div className="dashboard-task-group-header">
+                    <h3>Upcoming</h3>
+
+                    <span>{upcomingTasks.length}</span>
+                  </div>
+
+                  {upcomingTasks.length > 0 ? (
+                    <div className="task-list">
+                      {upcomingTasks.map((task) => (
+                        <TaskCard
+                          key={task.id}
+                          task={task}
+                          onEdit={handleEdit}
+                          onDelete={handleDelete}
+                          onToggleComplete={handleToggleComplete}
+                          isUpdating={updatingTaskId === task.id}
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="dashboard-empty-group">No upcoming tasks.</p>
+                  )}
+                </div>
+
+                {/* No Due Date */}
+                <div className="dashboard-task-group">
+                  <div className="dashboard-task-group-header">
+                    <h3>No Due Date</h3>
+
+                    <span>{noDueDateTasks.length}</span>
+                  </div>
+
+                  {noDueDateTasks.length > 0 ? (
+                    <div className="task-list">
+                      {noDueDateTasks.map((task) => (
+                        <TaskCard
+                          key={task.id}
+                          task={task}
+                          onEdit={handleEdit}
+                          onDelete={handleDelete}
+                          onToggleComplete={handleToggleComplete}
+                          isUpdating={updatingTaskId === task.id}
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="dashboard-empty-group">
+                      No tasks without a due date.
+                    </p>
+                  )}
+                </div>
               </div>
             )}
           </section>

@@ -103,7 +103,7 @@ const createTask = async (req, res) => {
       `INSERT INTO tasks
        (title, description, priority, due_date, user_id)
        VALUES (?, ?, ?, ?, ?)`,
-      [title, description, priority, due_date, userId],
+      [title, description, priority, due_date || null, userId],
     );
 
     res.status(201).json({
@@ -167,7 +167,7 @@ const updateTask = async (req, res) => {
            priority = ?,
            due_date = ?
        WHERE id = ? AND user_id = ?`,
-      [title, description, status, priority, due_date, id, userId],
+      [title, description, status, priority, due_date || null, id, userId],
     );
 
     // If no row was updated:

@@ -1,7 +1,44 @@
 import "./TaskCard.css";
 
-const TaskCard = ({ task, onEdit, onDelete, onToggleComplete }) => {
+const TaskCard = ({ task, onEdit, onDelete, onToggleComplete, isUpdating }) => {
   const isCompleted = task.status === "completed";
+
+  // MySQL DATE should be treated as a date-only value.
+  // We avoid new Date() here because timezone conversion
+  // can change the displayed day.
+  const getDateOnly = (date) => {
+    if (!date) {
+      return null;
+    }
+
+    return String(date).split("T")[0];
+  };
+
+  const dueDate = getDateOnly(task.due_date);
+
+  // Display YYYY-MM-DD as DD Mon YYYY without timezone conversion.
+  const formattedDueDate = dueDate
+    ? (() => {
+        const [year, month, day] = dueDate.split("-");
+
+        const monthNames = [
+          "Jan",
+          "Feb",
+          "Mar",
+          "Apr",
+          "May",
+          "Jun",
+          "Jul",
+          "Aug",
+          "Sep",
+          "Oct",
+          "Nov",
+          "Dec",
+        ];
+
+        return `${day} ${monthNames[Number(month) - 1]} ${year}`;
+      })()
+    : null;
 
   return (
     <div className={`task-card ${isCompleted ? "task-completed" : ""}`}>
@@ -9,6 +46,7 @@ const TaskCard = ({ task, onEdit, onDelete, onToggleComplete }) => {
       <button
         className={`task-check ${isCompleted ? "checked" : ""}`}
         onClick={() => onToggleComplete(task)}
+        disabled={isUpdating}
         title={isCompleted ? "Mark as pending" : "Mark as completed"}
         aria-label={
           isCompleted ? "Mark task as pending" : "Mark task as completed"
@@ -22,6 +60,12 @@ const TaskCard = ({ task, onEdit, onDelete, onToggleComplete }) => {
         <h3>{task.title}</h3>
 
         {task.description && <p>{task.description}</p>}
+
+        {formattedDueDate ? (
+          <small className="task-due-date">Due: {formattedDueDate}</small>
+        ) : (
+          <small className="task-due-date">No due date</small>
+        )}
       </div>
 
       {/* Status, priority and actions */}
