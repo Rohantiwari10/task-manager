@@ -6,6 +6,7 @@ const {
   registerUser,
   loginUser,
   getMe,
+  guestLogin,
 } = require("../controllers/authController");
 
 const authenticateToken = require("../middleware/authMiddleware");
@@ -15,6 +16,9 @@ router.post("/register", registerUser);
 
 // POST /api/auth/login
 router.post("/login", loginUser);
+
+// POST /api/auth/guest
+router.post("/guest", guestLogin);
 
 // GET /api/auth/me
 // Protected route: user must send a valid JWT.

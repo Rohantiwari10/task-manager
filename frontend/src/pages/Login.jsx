@@ -25,26 +25,36 @@ const Login = () => {
 
       navigate("/dashboard");
     } catch (error) {
-      setError(
-        error.response?.data?.message || "Unable to login"
-      );
+      setError(error.response?.data?.message || "Unable to login");
+    }
+  };
+
+  // Login as a new temporary guest user.
+  const handleGuestLogin = async () => {
+    try {
+      setError("");
+
+      const response = await api.post("/auth/guest");
+
+      // Save guest JWT just like a normal login.
+      localStorage.setItem("token", response.data.token);
+
+      navigate("/dashboard");
+    } catch (error) {
+      setError(error.response?.data?.message || "Unable to continue as guest");
     }
   };
 
   return (
     <div className="auth-page">
       <div className="auth-container">
-
         {/* Left branding section */}
         <div className="auth-brand">
           <div className="brand-icon">✓</div>
 
           <h1>TaskFlow</h1>
 
-          <p>
-            Organize your work, manage your tasks,
-            and stay productive.
-          </p>
+          <p>Organize your work, manage your tasks, and stay productive.</p>
 
           <div className="brand-features">
             <span>✓ Simple task management</span>
@@ -61,7 +71,6 @@ const Login = () => {
           </div>
 
           <form onSubmit={handleSubmit}>
-
             <div className="form-group">
               <label>Email</label>
 
@@ -86,29 +95,27 @@ const Login = () => {
               />
             </div>
 
-            {error && (
-              <div className="error-message">
-                {error}
-              </div>
-            )}
+            {error && <div className="error-message">{error}</div>}
 
-            <button
-              type="submit"
-              className="primary-button"
-            >
+            <button type="submit" className="primary-button">
               Login
             </button>
-
           </form>
+
+          {/* Guest login */}
+          <button
+            type="button"
+            className="guest-button"
+            onClick={handleGuestLogin}
+          >
+            Continue as Guest
+          </button>
 
           <p className="auth-footer">
             Don't have an account?
-            <span onClick={() => navigate("/register")}>
-              Create account
-            </span>
+            <span onClick={() => navigate("/register")}>Create account</span>
           </p>
         </div>
-
       </div>
     </div>
   );

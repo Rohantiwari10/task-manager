@@ -122,6 +122,55 @@ const loginUser = async (req, res) => {
   }
 };
 
+const guestLogin = async (req, res) => {
+  try {
+    // Generate a unique guest identity for this session.
+    const guestId = `${Date.now()}_${Math.floor(Math.random() * 10000)}`;
+
+    const guestName = `Guest ${guestId}`;
+    const guestEmail = `guest_${guestId}@demo.local`;
+
+    // Hash a placeholder password because guest users do not use a password.
+    const passwordHash = await bcrypt.hash(`guest_${guestId}`, 10);
+
+    // Guest account will be marked as temporary for future cleanup.
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+    // Create a separate database user for every guest.
+    const [result] = await pool.query(
+      `INSERT INTO users
+       (name, email, password, is_guest, expires_at)
+       VALUES (?, ?, ?, ?, ?)`,
+      [guestName, guestEmail, passwordHash, true, expiresAt],
+    );
+
+    const userId = result.insertId;
+
+    // Create a normal JWT, just like regular login.
+    const token = jwt.sign(
+      {
+        userId,
+        email: guestEmail,
+      },
+      process.env.JWT_SECRET,
+      {
+        expiresIn: "1d",
+      },
+    );
+
+    res.status(201).json({
+      message: "Guest login successful",
+      token,
+    });
+  } catch (error) {
+    console.error("Guest login error:", error.message);
+
+    res.status(500).json({
+      message: "Guest login failed",
+    });
+  }
+};
+
 // ======================================================
 // GET CURRENT USER
 // ======================================================
@@ -160,4 +209,5 @@ module.exports = {
   registerUser,
   loginUser,
   getMe,
+  guestLogin,
 };

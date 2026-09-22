@@ -304,6 +304,31 @@ select {
 
 
 /* ========================================
+   GUEST LOGIN BUTTON
+======================================== */
+
+.guest-button {
+  width: 100%;
+  margin-top: 12px;
+  padding: 13px;
+  border: 1px solid var(--border-color);
+  border-radius: 9px;
+  background: transparent;
+  color: var(--text-color);
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.guest-button:hover {
+  background: var(--bg-color);
+  border-color: var(--primary-color);
+}
+
+
+/* ========================================
    ERROR MESSAGE
 ======================================== */
 
