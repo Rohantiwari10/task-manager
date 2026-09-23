@@ -18,33 +18,32 @@ app.use(express.json());
 app.use("/api/auth", authRoutes);
 
 app.get("/", (req, res) => {
-    res.json({
-        message: "Task Manager API is running successfully"
-    });
+  res.json({
+    message: "Task Manager API is running successfully",
+  });
 });
 
 app.use("/api/tasks", taskRoutes);
 
 // Start server only after checking database connection
 const startServer = async () => {
-    try {
-        // Test MySQL connection
-        await pool.query("SELECT 1");
+  try {
+    // Test MySQL connection
+    await pool.query("SELECT 1");
 
-        console.log("MySQL database connected successfully");
+    console.log("MySQL database connected successfully");
 
-        const PORT = process.env.PORT || 5000;
+    const PORT = process.env.PORT || 10000;
 
-        app.listen(PORT, () => {
-            console.log(`Server running on port ${PORT}`);
-        });
+    app.listen(PORT, "0.0.0.0", () => {
+      console.log(`Server running on port ${PORT}`);
+    });
+  } catch (error) {
+    console.error("MySQL connection failed:", error.message);
 
-    } catch (error) {
-        console.error("MySQL connection failed:", error.message);
-
-        // Stop application if database is unavailable
-        process.exit(1);
-    }
+    // Stop application if database is unavailable
+    process.exit(1);
+  }
 };
 
 startServer();
